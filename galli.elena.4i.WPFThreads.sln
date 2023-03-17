@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.32112.339
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "galli.elena.4i.WPFThreads", "galli.elena.4i.WPFThreads.csproj", "{C9F0EF3C-9D2E-408C-8266-31EA04B0A02A}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C9F0EF3C-9D2E-408C-8266-31EA04B0A02A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C9F0EF3C-9D2E-408C-8266-31EA04B0A02A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C9F0EF3C-9D2E-408C-8266-31EA04B0A02A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C9F0EF3C-9D2E-408C-8266-31EA04B0A02A}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {51B09177-C6F0-41D7-8EB4-E9E5C4CE01D2}
+	EndGlobalSection
+EndGlobal
