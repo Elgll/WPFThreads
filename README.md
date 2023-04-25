@@ -45,6 +45,11 @@ Di solito le proprietà sono divise per categorie.
 Andando su center screen il file sta in mezzo al monitor. 
 Basta che manchi la chiusura di un tag per commettere errori con lo Xaml e per non far funzionare più niente.
 gli attributi si scrivono in chiave nome = valore:
+
+```
+ <TextBlock x:Name="lblCounter1" FontSize="50"></TextBlock>
+
+```
   
   
   INTERFACCIA UTENTE:
@@ -58,11 +63,49 @@ Lato c# si ha un costruttore che inizializza i componenti, questo lo fa dotnet p
   
 Nella riga 1 della griglia saranno visualizzati i tre processi più quello che somma i loro valori e il loro incremento una volta avviata l’esecuzione. Essi sono definiti da oggetti TextBlock di cui si definiscono gli attributi ossia il nome, la grandezza del font. Sotto di essi sarà presente una progressive bar che mostra, in base al valore della somma dei dei tre contatori, a che punto del loro incremento ci si trova. Anche questa è definita da attributi come il nome e la sua grandezza specificata  solo in base all’altezza.
 
+
+```
+ WindowStartupLocation="CenterScreen"
+        Height="450" Width="800">
+    <Grid ShowGridLines="True">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="100"></RowDefinition>
+            <RowDefinition></RowDefinition>
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Orientation="Horizontal">
+            <Button x:Name="btnGo" Width="100" Click="Button_Click"></Button>
+            <Button x:Name="btnClear" Width="100" Click="btnClear_Click"></Button>
+        </StackPanel>
+
+        <StackPanel Grid.Row="1">
+            <TextBlock x:Name="lblCounter1" FontSize="50"></TextBlock>
+            <TextBlock x:Name="lblCounter2" FontSize="50"></TextBlock>
+            <TextBlock x:Name="lblCounter3" FontSize="50"></TextBlock>
+            <ProgressBar x:Name="prbarCounter1" Height="50" Maximum="0"></ProgressBar>
+            <TextBlock x:Name="lblCounterTOT" FontSize="50">
+            </TextBlock>
+        </StackPanel>
+    </Grid>
+```
+
   
 CODE-BEHIND:
 Si tratta del codice che lavora dietro a ciò che si vede durante l’esecuzione che permette gli aggiornamenti della grafica che mostrano l’esecuzione dei processi.
 L’esercizio consiste di creare un thread ( piccolo programma unità di codice autonomo che gira ma il suo lavoro è definito in uno spazio più preciso, mentre l’applicazione che sta girando possiamo definirla come un processo che al suo interno ad ogni interazione fa partire un thread).
 Il problema è che in thread avente la propria autonomia non può parlare con un altro thread in modo diretto modificando da fuori il valore delle variabili dato che ci potrebbe essere un problema di concorrenza motivo per cui si usa uno specifico metodo che permette tale azione.
+
+```
+ Thread thread1 = new Thread(incrementa1);  //crazione del tread 1 e farlo partire
+            thread1.Start();
+
+            Thread thread2 = new Thread(incrementa2);  //crazione del tread 1 e farlo partire
+            thread2.Start();
+
+            Thread thread3 = new Thread(incrementa3);  //crazione del tread 1 e farlo partire
+            thread3.Start();
+
+```
 
 Ma quando si incrementa il metodo il for fa 1000 giri incrementando la variabile il risultato all’esecuzione l’output continuerà ad incrementarsi del valore presente nel for (quello al centro). Se si aggiorna la grafica per l'utente risulta pesante quindi data la velocità con cui si incrementa _counter aspetta che finisce e si aggiorna però in questo modo, aggiornando di fatto la grafica di continuo.  il codice così scritto ci mette molto più tempo per elaborare e quando finisce il proprio giro (ci mette un po ') fermando il thread ad ogni giro. Quello che succede  è che nell’interfaccia grafica è che fino alla fine della sua esecuzione il processo non da output dato che è bloccante (Thread.Sleep()) quidni si congelano i controlli sulle modifiche grafiche e di codice, un applicazione scritta in questo modo lagga e la macchina non ascolta nessuno. Quindi blocca l'esecuzione ad ogni iterazione del codice creando un processo lento che blocca l’interfaccia completamente. Quello che dobbiamo fare è lanciare un thread separato dandogli una velocità, ma lasciando il thread dell’interfaccia grafica libera in modo tale che possa gestire gli eventi.
 il sistema a questo punto da un errore in cui il thread secondario è andato in conflitto con il thread primario perché essi non possono usare le stesse risorse, serve perciò un “lasciapassare. 
@@ -71,8 +114,27 @@ Dispatcher.invoke e Lambda expression:
  Con il metodo Dispatcher.invoke è possibile eseguire il thread del codice che riesce a passare ad ogni iterazione a scrivere e poi lasciare il thread dell’interfaccia grafica aggiornarsi ad ogni scrittura, in questo modo è possibile vedere l’incremento di GIRI.
 () =>  questa è una lambda che serve per passare un pezzo di codice e invoca (chiama ad esecuzione)  il thread che vogliamo eseguire facendogli fare quello che dovrebbe fare quindi permettendogli di modificare counter e la label.
 Dispatcher.invoke è utilizzato quindi per l’aggiornamento dei contatori. Esso contiene un parametro e una parte detta Lambda expression che divide il blocco    ,aspetta il suo turno e invoca il codice contenuto. 
+
+```
+ Dispatcher.Invoke(() =>
+                {
+                    lblCounter1.Text = _counter1.ToString();  //contatore
+                    lblCounter2.Text = _counter2.ToString();  //contatore
+                    lblCounter3.Text = _counter3.ToString();  //contatore
+
+                    prbarCounter1.Value = _counter1 + _counter2 + _counter3;
+                    btnGo.IsEnabled = true;
+                }
+                );
+```
   
 Ad ogni click del pulsante viene lanciato un nuovo thread e tutti i thread lavoreranno sulla stessa variabile. I thread  infatti hanno degli stati con cui si può controllare la loro esecuzione. Creando due thread (si inizializzano) che si incrementano si vedrà che vanno uno più veloce dell'altro dal momento che lavorando sulla stessa variabile. 
+
+```
+ const int TEMPO1 = 1;
+        const int TEMPO2 = 10;
+        const int TEMPO3 = 100;
+```
   
 Avendo due contatori, però, si dovrebbero incrementare a 2000, ma c’è qualcosa che non torna dato che mancano dei conteggi. I processi prendono la variabile counter che viene incrementata, ma la concorrenza dei thread sulla variabile la porta ad essere già incrementata. 
   quindi è necessario bloccare l’incremento di counter con lock  che richiede un oggetto da bloccare.
@@ -83,6 +145,10 @@ La funzione counter due ad una certa non aggiorna più la sua label nell’inter
 SEMAFORI:
 I semafori sono dei costrutti messi a disposizione del cuore del sistema operativo (kernel) che vengono messe a disposizione e bloccano tutto, interrompono ogni altro processo. questi costrutti sono i lock che hanno dei contatori da 0 che non può essere negativo. Signal: decremento contatore, Wait: si aspetta che il contatore diventi 0. quindi si procederà creando il semaforo costruendo una procedura bloccante.
 
+```
+CountdownEvent semaforo;
+```
+
 Si dichiara quindi il semaforo in cui si specifica il valore da cui parte dichiarando nel main e impostando il valore di base nel metodo Button-Click. subito dopo si blocca il semaforo con la funzione di Wait(). 
 Il Signal sarà dato alla fine delle funzioni di incremento.
 Per testare la fine del lavoro con una message box si visualizza un messaggio di fine. 
@@ -90,11 +156,32 @@ L'esecuzione porta al blocco dell’interfaccia perchè il wait usato nel main w
 siamo quindi obbligati alla creazione di un terzo thread per cui ci sarà bisogno di un metodo,  
 in cui si attende (metodo attendi) il thread 3 esegue quindi il wait ma permetterà l’esecuzione delle funzioni di windows.
 Dispatcher.invoke sarà utilizzato anche in questo caso per l’aggiornamento dei contatori. Esso contiene un parametro e una parte detta Lambda expression che divide il blocco con   () =>, aspetta il suo turno e invoca il codice contenuto.
+
+```
+ semaforo.Signal();
+```
   
 Quando clicco il bottone di nuovo la seconda volta che si entra il semaforo è totalmente decrementato, quindi sparisce. Una soluzione è bloccare il pulsante fino alla fine dell’esecuzione.
 Creiamo un pulsante che una volta creato è spento momentaneamente dopo il primo click che fa partire i thread contatori. con un semaforo dichiarato in locale  con un contatore da due eventi.
 Il thread 3 ha una lambda expression ossia una funzione che aspetta che il semaforo sia a 0. 
 a quel punto si può cliccare di nuovo  il pulsante. Il decremento del semaforo parte e si risettano i contatori.
+
+```
+ private void btnClear_Click(object sender, RoutedEventArgs e) //pulsante clear
+        {
+             _counter1 = 0;
+             _counter2 = 0;
+             _counter3 = 0;
+            lblCounter1.Text = _counter1.ToString();
+            lblCounter2.Text = _counter2.ToString();
+            lblCounter3.Text = _counter3.ToString();
+
+            prbarCounter1.Value = 0;
+            prbarCounter1.Maximum = GIRI1 + GIRI2 + GIRI3;  //la progress bar deve conteggiare tutti 3 i GIRI
+
+        }
+    }
+```
 
 Quindi per la scrittura dei metodi dietro ai tre bottoni creati per permettere la visualizzazione e gli incrementi tolai dei valori deti thread il codide sarà strutturato in questo modo :
 -si definiscono innanzitutto i valori massimi raggiungibili,i tempi a cui i contatori si dovranno incrementare e i contatori stessi a 0:
@@ -104,4 +191,32 @@ Quindi per la scrittura dei metodi dietro ai tre bottoni creati per permettere l
   i primi tre saranno quelli che si incrementano durante l’esecuzione attraverso dei metodi definiti sotto;
   il quarto accompagnato da un  Dispatcher.invoke ( metodo con cui è  possibile eseguire il thread del codice che riesce a passare ad ogni iterazione a scrivere e poi   lasciare il thread dell’interfaccia grafica aggiornarsi ad ogni scrittura, in questo modo è possibile vedere l’incremento di GIRI) e una lambda expression come         parametro. In questo metodo si aggiorna l’interfaccia grafica.
   si inizializza il semaforo.
+  
+  ```
+    private void incrementa1()    //aumenta i contatore di 1
+        {
+            for (int x = 0; x < GIRI1; x++)
+            {
+                lock (_locker)
+                {
+                    _counter1++;
+                }
+
+                Dispatcher.Invoke(
+
+                    () =>
+
+                    {
+                        lblCounter1.Text = _counter1.ToString();
+                        prbarCounter1.Value = _counter1 + _counter2 + _counter3;
+                        lblCounterTOT.Text = (_counter1 + _counter2 + _counter3).ToString();    
+                    }
+
+                );
+
+                Thread.Sleep(TEMPO1);
+            }
+            semaforo.Signal();  //SEGNALAZIONE AL SEMAFORO
+        }
+  ```
 
